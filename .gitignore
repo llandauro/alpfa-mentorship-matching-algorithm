@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Google Apps Script / Clasp Secrets
+.clasp.json
+.clasprc.json
+creds.json
+
+# Build files
+dist/
+
+# OS/IDE files
+.vscode/
+.DS_Store
+Thumbs.db
