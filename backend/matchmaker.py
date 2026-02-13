@@ -8,18 +8,22 @@ class MatchingAlgorithm:
         self.mentees = df_mentees
         self.mentors = df_mentors
         self.matches = []
-        # We define defaults in case weights are missing from the API call
-        default_weights = {
-            "Experience": 2,
-            "Field": 2,
-            "CareerStage": 3,
-            "Studies": 1,
-            "Objectives": 3
+        # 1. Initialize with the keys set as 0 first
+        self.weights = {
+            "Experience": 0,
+            "Field": 0,
+            "CareerStage": 0,
+            "Studies": 0,
+            "Objectives": 0
         }
-        # Merge user weights with defaults
-        self.weights = default_weights
+        # Overwrite with whatever the user provided from the Google Sheet
         if weights:
-            self.weights.update(weights)
+            # Use .items() to ensure we only update keys that exist in our map
+            for key, value in weights.items():
+                if key in self.weights:
+                    # Convert to int/float in case the API sends strings
+                    self.weights[key] = float(value) if value is not None else 0
+        print(self.weights)
 
     def preprocess_data(self):
         # Ensure compatibility and consistency in data types
@@ -50,26 +54,27 @@ class MatchingAlgorithm:
                     mentee_exp = int(mentee['Experience'].split()[0])
                     mentor_exp = int(mentor['Experience'].split()[0])
                     if mentor_exp > mentee_exp:
-                        score += self.weights.get("Experience", 2)
+                        score += self.weights.get("Experience", 0)
                 except (ValueError, IndexError):
                     pass # Handle cases like "n/a" safely
 
                 # Field Match
                 if mentee['Field'] == mentor['Field']:
-                    score += self.weights.get("Field", 2)
+                    score += self.weights.get("Field", 0)
                 
                 # 3. Ordinal Logic: Use maps 
                 if stage_map.get(mentee['CareerStage'], 0) < stage_map.get(mentor['CareerStage'], 0):
-                    score += self.weights.get("CareerStage", 3)
+                    score += self.weights.get("CareerStage", 0)
                 if studies_map.get(mentee['Studies'], 0) < studies_map.get(mentor['Studies'], 0):
-                    score += self.weights.get("Studies", 1)
+                    score += self.weights.get("Studies", 0)
                 
                 # Objectives
                 if mentee['Objectives'] in mentor['Capacities']:
-                    score += self.weights.get("Objectives", 3)
+                    score += self.weights.get("Objectives", 0)
 
                 # Store score for this pair
                 compatibility_scores[(mentee_idx, mentor_idx)] = score
+                print(f"Score for {mentee['Name']} & {mentor['Name']}: {score}")
 
         # 4. Generate Sorted Preference Lists for BOTH sides based on the Score
         for mentee_idx in self.mentees.index:
@@ -81,7 +86,7 @@ class MatchingAlgorithm:
             # Sort all mentees by score (descending)
             ranked_mentees = sorted(self.mentees.index, key=lambda m_idx: -compatibility_scores[(m_idx, mentor_idx)])
             mentor_preferences[mentor_idx] = ranked_mentees
-
+        
         return mentee_preferences, mentor_preferences
 
     def gale_shapley_matching(self, mentee_preferences, mentor_preferences):

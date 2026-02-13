@@ -41,11 +41,13 @@ function runMatchingFromSheet() {
   const apiUrl = settingsSheet.getRange("B1").getValue().toString().trim(); 
   if (!apiUrl) throw new Error("Please enter your ngrok URL in cell B1 of the Settings tab.");
   
-  // 2. Map weights from the sheet
+  // 2. Map weights from the sheet to match Python's keys exactly
   const weights = {
-    field_weight: settingsSheet.getRange("B2").getValue(),
-    experience_weight: settingsSheet.getRange("B3").getValue(),
-    stage_weight: settingsSheet.getRange("B4").getValue()
+    "Experience": settingsSheet.getRange("B2").getValue(),
+    "Field":      settingsSheet.getRange("B3").getValue(),
+    "CareerStage":settingsSheet.getRange("B4").getValue(),
+    "Studies":    settingsSheet.getRange("B5").getValue(),
+    "Objectives": settingsSheet.getRange("B6").getValue()
   };
 
   // 3. Grab the data
@@ -81,25 +83,34 @@ function getSheetData(sheetName) {
 }
 
 /**
- * Takes the 'matches' object from FastAPI and writes it to the Results tab.
+ * Takes the 'matches' array from FastAPI and writes it to the Results tab.
  */
 function writeResultsToSheet(matchResponse) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let resultSheet = ss.getSheetByName("Results");
   
-  // Create the sheet if it doesn't exist
   if (!resultSheet) {
     resultSheet = ss.insertSheet("Results");
   }
   
   resultSheet.clear();
-  resultSheet.getRange(1, 1, 1, 2).setValues([["Mentor Index/ID", "Mentee Index/ID"]]);
 
-  const matchData = matchResponse.matches; // { "0": 1, "2": 0 }
-  const output = Object.entries(matchData).map(([mentor, mentee]) => [mentor, mentee]);
+  // 1. Headers
+  resultSheet.getRange(1, 1, 1, 2).setValues([["Mentor Name", "Mentee Name"]]);
+
+  const matchData = matchResponse.matches; // This is now an array: [{mentor: "...", mentee: "..."}, ...]
+
+  // 2. Map the array of objects into rows
+  // We extract the specific values for 'mentor' and 'mentee' keys
+  const output = matchData.map(match => [match.mentor, match.mentee]);
 
   if (output.length > 0) {
+    // 3. Write the clean names to the sheet
     resultSheet.getRange(2, 1, output.length, 2).setValues(output);
+    
+    // Resizes columns for better visibility
+    resultSheet.autoResizeColumns(1, 2);
+    resultSheet.getRange("A1:B1").setFontWeight("bold");
   }
   
   SpreadsheetApp.getUi().alert("Matching Complete! Check the Results tab.");
