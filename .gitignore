@@ -9,6 +9,9 @@ creds.json
 # Build files
 dist/
 
+# Environment / Local Config
+src/config.ts
+
 # OS/IDE files
 .vscode/
 .DS_Store
