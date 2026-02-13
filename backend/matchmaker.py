@@ -2,10 +2,24 @@ import pandas as pd
 from collections import defaultdict
 
 class MatchingAlgorithm:
-    def __init__(self, mentee_file: str, mentor_file: str):
-        self.mentees = pd.read_csv(mentee_file)
-        self.mentors = pd.read_csv(mentor_file)
-        self.matches = {}
+    def __init__(self, df_mentees, df_mentors, weights=None):
+        # Removed the pd.read_csv lines!
+        # Now I can Just assign the dataframes directly
+        self.mentees = df_mentees
+        self.mentors = df_mentors
+        self.matches = []
+        # We define defaults in case weights are missing from the API call
+        default_weights = {
+            "Experience": 2,
+            "Field": 2,
+            "CareerStage": 3,
+            "Studies": 1,
+            "Objectives": 3
+        }
+        # Merge user weights with defaults
+        self.weights = default_weights
+        if weights:
+            self.weights.update(weights)
 
     def preprocess_data(self):
         # Ensure compatibility and consistency in data types
@@ -36,24 +50,23 @@ class MatchingAlgorithm:
                     mentee_exp = int(mentee['Experience'].split()[0])
                     mentor_exp = int(mentor['Experience'].split()[0])
                     if mentor_exp > mentee_exp:
-                        score += 2
-                        score += (mentee_exp * 0.1)
+                        score += self.weights.get("Experience", 2)
                 except (ValueError, IndexError):
                     pass # Handle cases like "n/a" safely
 
                 # Field Match
                 if mentee['Field'] == mentor['Field']:
-                    score += 2
+                    score += self.weights.get("Field", 2)
                 
                 # 3. Ordinal Logic: Use maps 
                 if stage_map.get(mentee['CareerStage'], 0) < stage_map.get(mentor['CareerStage'], 0):
-                    score += 3
+                    score += self.weights.get("CareerStage", 3)
                 if studies_map.get(mentee['Studies'], 0) < studies_map.get(mentor['Studies'], 0):
-                    score += 1
+                    score += self.weights.get("Studies", 1)
                 
                 # Objectives
                 if mentee['Objectives'] in mentor['Capacities']:
-                    score += 3
+                    score += self.weights.get("Objectives", 3)
 
                 # Store score for this pair
                 compatibility_scores[(mentee_idx, mentor_idx)] = score
@@ -96,7 +109,14 @@ class MatchingAlgorithm:
                 else:
                     mentees_free.append(mentee_index) # Mentee rejected, back to queue
 
-        self.matches = {mentor_index: mentee_index for mentor_index, mentee_index in mentor_engagements.items() if mentee_index is not None}
+        #self.matches = {mentor_index: mentee_index for mentor_index, mentee_index in mentor_engagements.items() if mentee_index is not None}
+        self.matches = []
+        for m_idx, mentee_idx in mentor_engagements.items():
+            if mentee_idx is not None:
+                self.matches.append({
+                    "mentor": self.mentors.loc[m_idx, 'Name'].title(),
+                    "mentee": self.mentees.loc[mentee_idx, 'Name'].title()
+                })
 
     def run_matching(self):
         self.preprocess_data()
@@ -111,6 +131,7 @@ class MatchingAlgorithm:
             print(f"Mentor: {mentor_name} <--> Mentee: {mentee_name}")
 
 # Usage
-algorithm = MatchingAlgorithm("mentees.csv", "mentors.csv")
-algorithm.run_matching()
-algorithm.display_matches()
+if __name__ == "__main__":
+    algorithm = MatchingAlgorithm("mentees.csv", "mentors.csv")
+    algorithm.run_matching()
+    algorithm.display_matches()

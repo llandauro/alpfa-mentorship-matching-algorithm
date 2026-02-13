@@ -18,7 +18,7 @@ async def run_match(data: MatchRequest):
     df_mentors = pd.DataFrame(data.mentors)
     
     # Initialize matching algorithm algorithm
-    selector = MatchingAlgorithm(df_mentees, df_mentors)
+    selector = MatchingAlgorithm(df_mentees, df_mentors, weights=data.weights)
     selector.run_matching() 
     
     return {"matches": selector.matches}
