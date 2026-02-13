@@ -46,13 +46,15 @@ I implemented a Weighted Gale-Shapley Algorithm, a concept from my Algorithm Des
 3. Run the server: 
     ```bash
     python main.py
-    ```
+     ```
+! **Important**: Keep this terminal window open while testing. The backend server must be active for the Google Sheet to communicate with the matching algorithm.
 
 ### Connect the Cloud (Ngrok)
 Since Google Sheets cannot "see" your localhost, you must create a public tunnel to port 8000:
 1. Install ngrok
-2. In a new terminal, run: ```ngrok http 8000```
+2. In a new terminal, run: ```ngrok http 8000``` (Note: It must be port 8000 to match the backend configuration in main.py.)
 3. Copy the Forwarding URL (e.g., https://random-id.ngrok-free.dev).
+! **Important**: Keep this terminal window open while testing; closing it will disconnect the tunnel.
 
 ### Frontend Setup
 I have provided a Google Sheet with anonymous dummy data for testing. There is no sensitive information or real-user data included in this dataset.
