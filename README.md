@@ -54,6 +54,7 @@ Since Google Sheets cannot "see" your localhost, you must create a public tunnel
 1. Install ngrok
 2. In a new terminal, run: ```ngrok http 8000``` (Note: It must be port 8000 to match the backend configuration in main.py.)
 3. Copy the Forwarding URL (e.g., https://random-id.ngrok-free.dev).
+
 ! **Important**: Keep this terminal window open while testing; closing it will disconnect the tunnel.
 
 ### Frontend Setup
