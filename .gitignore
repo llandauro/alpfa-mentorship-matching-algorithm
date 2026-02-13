@@ -2,12 +2,14 @@
 node_modules/
 
 # Google Apps Script / Clasp Secrets
-.clasp.json
 .clasprc.json
 creds.json
 
 # Build files
 dist/
+
+# Environment / Local Config
+src/config.ts
 
 # OS/IDE files
 .vscode/
