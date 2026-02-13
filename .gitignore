@@ -2,7 +2,6 @@
 node_modules/
 
 # Google Apps Script / Clasp Secrets
-.clasp.json
 .clasprc.json
 creds.json
 
